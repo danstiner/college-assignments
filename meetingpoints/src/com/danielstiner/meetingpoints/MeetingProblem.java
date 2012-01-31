@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -134,13 +133,13 @@ public class MeetingProblem implements IProblem {
 		Collection<INode> explored2 = new HashSet<INode>();
 
 		for (INode node : p1.getStartingNodes())
-			explored1.addAll(mNodeExplorerProvider.get().explore(
-					node, p1.getTravelReversed()));
-		
+			explored1.addAll(mNodeExplorerProvider.get().explore(node,
+					p1.getTravelReversed()));
+
 		for (INode node : p2.getStartingNodes())
-			explored2.addAll(mNodeExplorerProvider.get().explore(
-					node, p2.getTravelReversed()));
-		
+			explored2.addAll(mNodeExplorerProvider.get().explore(node,
+					p2.getTravelReversed()));
+
 		// Find possible meeting points by intersection of explorations
 		explored2.retainAll(explored1);
 
