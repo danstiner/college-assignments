@@ -1,4 +1,4 @@
-package com.danielstiner.meetingpoints.test;
+package com.danielstiner.meetingpoints;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,8 +13,6 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.danielstiner.meetingpoints.MeetingProblem;
-import com.danielstiner.meetingpoints.MeetingModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 

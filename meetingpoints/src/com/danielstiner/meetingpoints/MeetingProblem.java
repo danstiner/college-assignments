@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -129,39 +130,21 @@ public class MeetingProblem implements IProblem {
 	 * @return
 	 */
 	private Collection<INode> findMeetingNodes(IPerson p1, IPerson p2) {
-		Collection<INode> meetingNodes = new LinkedList<INode>();
+		Collection<INode> explored1 = new HashSet<INode>();
+		Collection<INode> explored2 = new HashSet<INode>();
 
-		for (INode node : p1.getStartingNodes()) {
+		for (INode node : p1.getStartingNodes())
+			explored1.addAll(mNodeExplorerProvider.get().explore(
+					node, p1.getTravelReversed()));
+		
+		for (INode node : p2.getStartingNodes())
+			explored2.addAll(mNodeExplorerProvider.get().explore(
+					node, p2.getTravelReversed()));
+		
+		// Find possible meeting points by intersection of explorations
+		explored2.retainAll(explored1);
 
-			// Create network of visit-able points for p1 by exploration
-			Collection<INode> explored = mNodeExplorerProvider.get().explore(
-					node, p1.getTravelReversed());
-
-			meetingNodes.addAll(findMeetingNodes(explored, p2));
-		}
-
-		return meetingNodes;
-	}
-
-	private Collection<INode> findMeetingNodes(Collection<INode> explored,
-			IPerson p2) {
-		Collection<INode> meetingNodes = new LinkedList<INode>();
-
-		for (INode node : p2.getStartingNodes()) {
-
-			// Create network of visit-able points for p2 by exploration
-			Collection<INode> explored2 = mNodeExplorerProvider.get().explore(
-					node, p2.getTravelReversed());
-
-			// Find intersection of possible meeting points
-			explored2.retainAll(explored);
-
-			// Store all meetup nodes
-			meetingNodes.addAll(explored2);
-
-		}
-
-		return meetingNodes;
+		return explored2;
 	}
 
 	private static void printNodes(Collection<INode> nodes, OutputStream to) {
