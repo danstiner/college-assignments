@@ -1,0 +1,22 @@
+Finding Meeting Points
+
+Simple programming exercise to find the possible meeting nodes for two people on a directed graph.
+
+Meeting nodes found in O(n^2) time, where n is the number of nodes. Memory required is O(n)
+
+Note that the second person will traverse the directed graph in reverse from the normal, expeced direction the first person will traverse it.
+
+Output will be the names of possible meeting nodes, one per line on STDOUT.
+Input is assumed to be on STDIN of the form:
+
+Map:
+<fromNodeName1> <toNodeName1>
+<fromNodeName2> <toNodeName2>
+<fromNodeName3> <toNodeName3>
+...
+Avoid:
+NodeNameToAvoid1 NodeNameToAvoid2 ...
+First Person:
+StartNodeName1 StartNodeName2 ...
+Second Person:
+StartNodeName1 StartNodeName2 ...
