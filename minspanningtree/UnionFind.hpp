@@ -8,11 +8,12 @@
 #ifndef UNIONFIND_H_
 #define UNIONFIND_H_
 
-#include <stdlib.h>
-#include <list>
+#include <boost/unordered/unordered_map.hpp>
 
 namespace danielstiner
 {
+
+using namespace boost::unordered;
 
 template<typename T>
 class UnionFind
@@ -20,146 +21,151 @@ class UnionFind
 
 private:
 
-	class Heap
+	class UnionSet
 	{
+
 	public:
 
-		Heap(T *value);
+		int size;
 
-		std::list<Heap*> subheaps;
+		UnionSet *parent;
 
-		T *value;
+		bool isRootSet;
+
+		UnionSet();
+
 	};
 
-	Heap *root;
+	typedef unordered_map<const T, UnionFind<T>::UnionSet*> set_map_t;
 
-	Heap* MergePairs(std::list<Heap*> &heaps);
+	set_map_t map;
 
-	Heap *Merge(Heap *heap1, Heap *heap2);
+	UnionSet*
+	Find(const T &element);
 
-	void PrependSubheap(Heap *heap, Heap *to);
-
-	void DeleteHeap(Heap *heap);
+	UnionSet*
+	InsertInternal(const T &element);
 
 public:
-	PairingHeap();
-	~PairingHeap();
 
-	T *
-	FindMin();
-
-	T *
-	ExtractMin();
+	UnionFind();
+	~UnionFind();
 
 	void
-	Insert(T *item);
+	Insert(const T &element);
+
+	void
+	Union(const T &a, const T &b);
+
+	bool
+	InSameSet(const T &a, const T &b);
 
 };
 
 template<typename T>
-PairingHeap<T>::Heap::Heap(T *value)
+inline UnionFind<T>::UnionSet::UnionSet()
 {
-	this->value = value;
+	this->size = 1;
+	this->parent = this;
+	this->isRootSet = true;
 }
 
 template<typename T>
-PairingHeap<T>::PairingHeap()
+inline UnionFind<T>::UnionFind()
 {
-	root = NULL;
 }
 
 template<typename T>
-PairingHeap<T>::~PairingHeap()
+inline UnionFind<T>::~UnionFind()
 {
-	// TODO Auto-generated destructor stub
-}
+	typename set_map_t::iterator it;
 
-template<class ItemType>
-ItemType *
-PairingHeap<ItemType>::FindMin()
-{
-	if (this->root == NULL)
+	for (it = map.begin(); it != map.end(); ++it)
 	{
-		// Handle empty tree
-		// error
-		return NULL;
-	}
-	else
-	{
-		return this->root->value;
-	}
-}
-
-template<class ItemType>
-void PairingHeap<ItemType>::Insert(ItemType *item)
-{
-	this->root = Merge(new Heap(item), root);
-}
-
-template<class ItemType>
-ItemType *
-PairingHeap<ItemType>::ExtractMin()
-{
-	if (root == NULL)
-	{ // error out
-		return NULL;
-	}
-	else
-	{
-		ItemType *ret = root->value;
-		Heap *h = MergePairs(root->subheaps);
-
-		delete root;
-
-		root = h;
-
-		return ret;
-	}
-}
-
-template<typename ItemType>
-typename PairingHeap<ItemType>::Heap*
-PairingHeap<ItemType>::MergePairs(std::list<Heap*> &heaps)
-{
-	if (heaps.size() == 0)
-		return NULL;
-	else if (heaps.size() == 1)
-	{
-		Heap *heap = heaps.front();
-		heaps.pop_front();
-		return heap;
-	}
-	else
-	{
-		Heap *heap1 = heaps.front();
-		heaps.pop_front();
-		Heap *heap2 = heaps.front();
-		heaps.pop_front();
-		return Merge(Merge(heap1, heap2), MergePairs(heaps));
+		delete it->second;
 	}
 }
 
 template<typename T>
-typename PairingHeap<T>::Heap *
-PairingHeap<T>::Merge(Heap *heap1, Heap *heap2)
+inline typename UnionFind<T>::UnionSet *UnionFind<T>::InsertInternal(const T &element)
 {
-	if (heap2 == NULL)
-		return heap1;
-	else if (heap1 == NULL)
-		return heap2;
-	else if (*heap1->value < *heap2->value)
-	{
-		heap1->subheaps.push_front(heap2);
-
-		return heap1;
-	}
-	else
-	{
-		heap2->subheaps.push_front(heap1);
-
-		return heap2;
-	}
+	UnionSet * tmp = new UnionSet();
+	this->map[element] = tmp;
+	return tmp;
 }
 
-} /* namespace danielstiner */
+template<typename T>
+inline void UnionFind<T>::Insert(const T &element)
+{
+	this->map[element] = new UnionSet();
+}
+
+template<typename T>
+inline void UnionFind<T>::Union(const T &element1, const T &element2)
+{
+	UnionSet *a = Find(element1);
+	UnionSet *b = Find(element2);
+
+	if (a->size < b->size)
+	{
+		UnionSet *tmp = b;
+		b = a;
+		a = tmp;
+	}
+	b->parent = a;
+	b->isRootSet = false;
+
+	a->size += b->size;
+
+}
+
+template<typename T>
+inline bool UnionFind<T>::InSameSet(const T &element1, const T &element2)
+{
+	return (Find(element1) == Find(element2));
+}
+
+template<typename T>
+inline typename UnionFind<T>::UnionSet *UnionFind<T>::Find(const T &element)
+{
+	UnionSet *root_set = NULL;
+
+	try
+	{
+		root_set = map.at(element);
+	} catch (std::out_of_range &e)
+	{
+		root_set = InsertInternal(element);
+	}
+
+	if (!root_set->isRootSet)
+	{
+		root_set = root_set->parent;
+	}
+
+	// if the direct parent is not the root set
+	// then find the root and update all parent pointer
+	// to equal the root
+	if (!root_set->isRootSet)
+	{
+		// Finds root set always
+		while (!root_set->isRootSet)
+			root_set = root_set->parent;
+
+		// Update parent references
+		UnionSet *set = map.at(element);
+		while (!set->isRootSet)
+		{
+			UnionSet *tmp = set;
+			set = set->parent;
+			tmp->parent = root_set;
+		}
+
+	}
+
+	return root_set;
+}
+
+}
+
 #endif /* PAIRINGHEAP_H_ */

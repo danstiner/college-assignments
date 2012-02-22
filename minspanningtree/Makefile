@@ -1,15 +1,20 @@
 CXXFLAGS =	-O2 -g -Wall -fmessage-length=0
 
-OBJS =		315x-project1.o PairingHeap.o
+TARGET =	prims kruskals primslist
 
-LIBS =
+all:	prims kruskals
 
-#TARGET =	project1
-
-project1: project1.cpp PairingHeap.hpp
-	$(CXX) -o project1 project1.cpp $(CXXFLAGS)
-
-all:	project1
+prims: prims.cpp PairingHeap.hpp common.hpp Graph.hpp
+	$(CXX) -o prims prims.cpp $(CXXFLAGS)
+	
+primslist: prims.cpp PairingHeap.hpp common.hpp Graph.hpp
+	$(CXX) -o primslist prims.cpp $(CXXFLAGS)
+	
+kruskals: kruskals.cpp UnionFind.hpp common.hpp Graph.hpp
+	$(CXX) -o kruskals kruskals.cpp $(CXXFLAGS)
 
 clean:
-	rm -f project1 project1.o PairingHeap.o
+	rm -f prims kruskals primslist
+
+	
+.PHONY: all clean 

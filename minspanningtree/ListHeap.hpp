@@ -20,49 +20,60 @@ class ListHeap
 
 private:
 
-	std::list<T> items;
+	std::list<T*> items;
 public:
-	ListHeap() {};
-	~ListHeap() {};
+	ListHeap()
+	{
+	}
+	;
+	~ListHeap()
+	{
+	}
+	;
 
-	T
+	T*
 	ExtractMin();
 
 	void
-	Insert(T item);
+	Insert(T *item);
 
 };
 
-template<class ItemType>
-void ListHeap<ItemType>::Insert(ItemType item)
+template<class T>
+void ListHeap<T>::Insert(T *item)
 {
 	items.push_front(item);
 }
 
 template<typename T>
-T
+T*
 ListHeap<T>::ExtractMin()
 {
-	T min;
+	T* min;
+	typename std::list<T*>::iterator it;
 
-//	if(items.size() == 0)
-//		return NULL;
+	if (items.size() == 0)
+		return NULL;
 
+	// Find min
 	min = items.front();
-
-	typename std::list<T>::iterator it;
-
-	for(it = items.begin(); it != items.end(); ++it)
+	for (it = items.begin(); it != items.end(); ++it)
 	{
-		if((*it) < min)
+		if (*(*it) < *min)
 			min = *it;
 	}
 
-	items.remove(min);
+	// Remove min
+	for (it = items.begin(); it != items.end(); ++it)
+	{
+		if (*it == min) {
+			items.erase(it);
+			break;
+		}
+	}
 
 	return min;
 }
-
 
 } /* namespace danielstiner */
 #endif /* PAIRINGHEAP_H_ */

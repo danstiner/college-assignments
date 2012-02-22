@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : prims.cpp
+// Name        : kruschals.cpp
 // Author      : Daniel Stiner <daniel.stiner@gmail.com>
 //============================================================================
 
@@ -17,9 +17,7 @@ int main(int argc, char **argv)
 
 	edge_list *edges = Graph::ReadEdgeList(in);
 
-	adjacency_list *adj = Graph::BuildAdjacencyList(edges);
-
-	spanning_tree mst = Graph::Prims(adj);
+	spanning_tree mst = Graph::Kruskals(edges);
 
 	minspanningtree::print_mst(argv[2], mst);
 
