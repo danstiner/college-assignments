@@ -1,0 +1,26 @@
+OVERVIEW
+
+Efficient implementation of minimum tree finding using Prim's and Kurskal's
+algorithms.
+
+
+INSTALLATION
+
+Requires boost version 1.38ish or higher for unordered_map.
+
+Either use 'make' under linux or import the project to eclipse and build.
+Run configurations are setup in eclipse for both prims and kruskals executables.
+
+
+USAGE
+
+./kruskals graph_input_file mst_output_file
+
+Where the input file is of the form:
+  <number of unique vertices>
+  <number of edges>
+  <vertex> <vertex> <weight>
+  <vertex> <vertex> <weight>
+  ...
+
+and the output minimum spanning tree file will be of the same form

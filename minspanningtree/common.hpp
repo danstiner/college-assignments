@@ -21,9 +21,22 @@ namespace minspanningtree
 
 using namespace std;
 
-bool check_inputs(int argc, char **argv)
+void check_inputs(int argc, char **argv)
 {
-	return true;
+	if(argc < 3)
+	{
+		cout << "Usage:" << endl;
+		cout << "./" << argv[0] << " input_graph_file output_mst_file" << endl;
+
+		cout << "Where the input file is of the form:" << endl;
+		cout << "  <number of unique vertices>" << endl;
+		cout << "  <number of edges>" << endl;
+		cout << "  <vertex> <vertex> <weight>" << endl;
+		cout << "  <vertex> <vertex> <weight>" << endl;
+		cout << "  ..." << endl;
+
+		exit(2);
+	}
 }
 
 void print_mst(char *filename, spanning_tree mst)
