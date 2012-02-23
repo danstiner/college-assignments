@@ -238,7 +238,10 @@ list<Edge<int> > Graph::Prims(adjacency_list *graph)
 				return mst;
 			}
 
-			//heap.Insert(*it);
+			// Could implement decrement key on the heap to get slightly better runtime
+			// but since we check edges as they are removed from the heap, its not really needed
+			// Any edges between the same (u,v) with higher weights will be considered second
+			// and thus ignored
 		}
 
 		// Grab minimum edge with exactly one edge in closed set
