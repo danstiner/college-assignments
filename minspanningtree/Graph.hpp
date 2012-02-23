@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <iostream>
 #include <list>
-#include <boost/unordered/unordered_map.hpp>
-#include <boost/unordered/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "PairingHeap.hpp"
 #include "ListHeap.hpp"
@@ -22,7 +22,7 @@
 namespace danielstiner
 {
 
-using namespace boost::unordered;
+using namespace boost;
 using namespace std;
 
 template<typename T>
@@ -84,7 +84,7 @@ inline std::ostream& operator<<(std::ostream& is, Edge<T>& e)
 	return is;
 }
 
-typedef boost::unordered::unordered_map<int, std::list<Edge<int>*> > adjacency_list;
+typedef boost::unordered_map<int, std::list<Edge<int>*> > adjacency_list;
 
 typedef std::list<Edge<int>*> edge_list;
 

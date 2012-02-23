@@ -8,12 +8,12 @@
 #ifndef UNIONFIND_H_
 #define UNIONFIND_H_
 
-#include <boost/unordered/unordered_map.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace danielstiner
 {
 
-using namespace boost::unordered;
+using namespace boost;
 
 template<typename T>
 class UnionFind
