@@ -282,66 +282,90 @@ list<Edge<int> > Graph::PrimsList(adjacency_list *graph)
 
 	unordered_set<int> closedSet;
 
-	list<Edge<int> > mst;
+		list<Edge<int> > mst;
 
-	ListHeap<Edge<int> > heap;
+		ListHeap<Edge<int> > heap;
 
-	list<Edge<int>*>::iterator it;
+		list<Edge<int>*>::iterator it;
 
-	int node;
+		int node;
 
-	Edge<int> *minEdge;
-	bool toClosed;
-	bool fromClosed;
+		Edge<int> *minEdge;
+		bool toClosed;
+		bool fromClosed;
 
-	// Start with the from node of first edge in the adjacency lists
-	node = graph->begin()->second.front()->fromNodeId;
-	closedSet.insert(node);
-
-	while (closedSet.size() < graph->size())
-	{
-
-		list<Edge<int>*> adjacent = graph->at(node);
-
-		//cerr << "Node:a " << node << endl;
-
-		// Copy all outgoing edges of node from adjacency list to heap
-		for (it = adjacent.begin(); it != adjacent.end(); ++it)
-		{
-			heap.Insert(*it);
-		}
-
-		// Grab minimum edge with exactly one edge in closed set
-		do
-		{
-			minEdge = heap.ExtractMin();
-
-			if (minEdge == NULL)
-			{
-				cerr << "ERROR: Ending on NULL edge" << endl;
-
-				exit(1);
-			}
-
-			toClosed = (0 < closedSet.count(minEdge->toNodeId));
-			fromClosed = (0 < closedSet.count(minEdge->fromNodeId));
-
-		} while (!(toClosed ^ fromClosed));
-
-		if (fromClosed)
-			node = minEdge->toNodeId;
-		else
-			//toClosed
-			node = minEdge->fromNodeId;
-
-		// Add this edge to the mst
-		// and mark the to node as in the closed set
-		mst.push_back(*minEdge);
+		// Start with the from node of first edge in the adjacency lists
+		node = graph->begin()->second.front()->fromNodeId;
 		closedSet.insert(node);
 
-	}
+		while (closedSet.size() < graph->size())
+		{
 
-	return mst;
+			list<Edge<int>*> adjacent = graph->at(node);
+
+			//cerr << "Node:a " << node << endl;
+
+			// Copy all outgoing edges of node from adjacency list to heap
+			for (it = adjacent.begin(); it != adjacent.end(); ++it)
+			{
+				if ((*it)->fromNodeId == node)
+				{
+					// Edge actual signifies edge (from, to)
+					toClosed = (0 < closedSet.count((*it)->toNodeId));
+					if (!toClosed)
+						heap.Insert(*it);
+				}
+				else if ((*it)->toNodeId == node)
+				{
+					// Edge actual signifies edge (to, from)
+					toClosed = (0 < closedSet.count((*it)->fromNodeId));
+					if (!toClosed)
+						heap.Insert(*it);
+				}
+				else
+				{
+					cerr << "ERROR: Weird stuff" << endl;
+
+					return mst;
+				}
+
+				// Could implement decrement key on the heap to get slightly better runtime
+				// but since we check edges as they are removed from the heap, its not really needed
+				// Any edges between the same (u,v) with higher weights will be considered second
+				// and thus ignored
+			}
+
+			// Grab minimum edge with exactly one edge in closed set
+			do
+			{
+				minEdge = heap.ExtractMin();
+
+				if (minEdge == NULL)
+				{
+					cerr << "ERROR: Ending on NULL edge" << endl;
+
+					exit(1);
+				}
+
+				toClosed = (0 < closedSet.count(minEdge->toNodeId));
+				fromClosed = (0 < closedSet.count(minEdge->fromNodeId));
+
+			} while (!(toClosed ^ fromClosed));
+
+			if (fromClosed)
+				node = minEdge->toNodeId;
+			else
+				//toClosed
+				node = minEdge->fromNodeId;
+
+			// Add this edge to the mst
+			// and mark the to node as in the closed set
+			mst.push_back(*minEdge);
+			closedSet.insert(node);
+
+		}
+
+		return mst;
 }
 
 adjacency_list *
