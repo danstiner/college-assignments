@@ -217,7 +217,28 @@ list<Edge<int> > Graph::Prims(adjacency_list *graph)
 		// Copy all outgoing edges of node from adjacency list to heap
 		for (it = adjacent.begin(); it != adjacent.end(); ++it)
 		{
-			heap.Insert(*it);
+			if ((*it)->fromNodeId == node)
+			{
+				// Edge actual signifies edge (from, to)
+				toClosed = (0 < closedSet.count((*it)->toNodeId));
+				if (!toClosed)
+					heap.Insert(*it);
+			}
+			else if ((*it)->toNodeId == node)
+			{
+				// Edge actual signifies edge (to, from)
+				toClosed = (0 < closedSet.count((*it)->fromNodeId));
+				if (!toClosed)
+					heap.Insert(*it);
+			}
+			else
+			{
+				cerr << "ERROR: Weird stuff" << endl;
+
+				return mst;
+			}
+
+			//heap.Insert(*it);
 		}
 
 		// Grab minimum edge with exactly one edge in closed set
@@ -255,7 +276,6 @@ list<Edge<int> > Graph::Prims(adjacency_list *graph)
 
 list<Edge<int> > Graph::PrimsList(adjacency_list *graph)
 {
-
 
 	unordered_set<int> closedSet;
 
@@ -325,7 +345,7 @@ adjacency_list *
 Graph::BuildAdjacencyList(edge_list *edges)
 {
 	edge_list::iterator it;
-	adjacency_list *adjacency = new adjacency_list(edges->size());
+	adjacency_list *adjacency = new adjacency_list();
 
 	// Iterate edges
 	for (it = edges->begin(); it != edges->end(); ++it)
@@ -334,11 +354,11 @@ Graph::BuildAdjacencyList(edge_list *edges)
 		Edge<int> * edge = *it;
 
 		// TODO: Use try-catch instead of this explicit check possibly
-		if(adjacency->count(edge->fromNodeId) == 0)
-			(*adjacency)[edge->fromNodeId] = list<Edge<int>* >();
+		if (adjacency->count(edge->fromNodeId) == 0)
+			(*adjacency)[edge->fromNodeId] = list<Edge<int>*>();
 
-		if(adjacency->count(edge->toNodeId) == 0)
-					(*adjacency)[edge->toNodeId] = list<Edge<int>* >();
+		if (adjacency->count(edge->toNodeId) == 0)
+			(*adjacency)[edge->toNodeId] = list<Edge<int>*>();
 
 		adjacency->at(edge->fromNodeId).push_back(edge);
 		adjacency->at(edge->toNodeId).push_back(edge);
@@ -359,32 +379,35 @@ edge_list *Graph::ReadEdgeList(std::istream & input)
 	char line[80];
 
 	// Speed up reading from file
-	setlocale(LC_ALL,"C");
+	setlocale(LC_ALL, "C");
 	input.rdbuf()->pubsetbuf(buffer, 16184);
 
 	// Read "<# of nodes>\n<# of edges>"
 	input >> nodeCount;
 	input >> edgeCount;
+	// Skip the extra \n
+	input.getline(line, 80);
 
-	// Allocate space to store edges
+	// Pre-allocate space to store edges
 	edges = new edge_list(edgeCount);
-	edgearr = new Edge<int>[edgeCount];
-
+	edgearr = new Edge<int> [edgeCount];
 
 	// Read edges of the form
 	// <from_int> <to_int> <weight_float>
 	// one per line
 	i = 0;
-	for(it = edges->begin(); it != edges->end(); ++it)
+	for (it = edges->begin(); it != edges->end(); ++it)
 	{
 		//Edge<int> *e = new Edge<int>();
 
 		input.getline(line, 80);
 
-		sscanf(line, "%d %d %f", &edgearr[i].fromNodeId, &edgearr[i].toNodeId, &edgearr[i].weight);
+		sscanf(line, "%d %d %f", &edgearr[i].fromNodeId, &edgearr[i].toNodeId,
+				&edgearr[i].weight);
 
 		//input >> edgearr[i];
 
+		// Pointer magic
 		*it = edgearr + i++;
 	}
 
