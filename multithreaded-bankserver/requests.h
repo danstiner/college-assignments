@@ -9,6 +9,9 @@
 #include "linkedlist.h"
 #include "Bank.h"
 
+#include "request_check.h"
+#include "request_transaction.h"
+
 #define LOCK_FINE 0
 #define LOCK_COARSE 1
 
@@ -21,12 +24,15 @@
 typedef struct request_item {
 	int id;
 	int type;
-	int argc;
-	char **argv;
+	void *data;
 } request_t;
 
 
 ll_t *g_requests;
+
+request_t *requests_new();
+
+void *requests_worker(void *workedId);
 
 int requests_create_workers(int count, int lockmode);
 
