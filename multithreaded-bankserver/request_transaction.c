@@ -40,6 +40,9 @@ request_transaction_process_internal(request_transaction_t *request, request_t *
 	locked_account_t accounts[request->count];
 	int new_balances[request->count];
 
+	// DEBUG
+	//fprintf(stderr, "Try TRANS %d\n", prequest->id);
+
 	// Get write locks right away
 	for(i=0; i<request->count && result > 0; i++)
 	{
@@ -133,6 +136,9 @@ request_transaction_process_internal(request_transaction_t *request, request_t *
 	// or success/ISF, which commits writes and unlocks
 	else
 	{
+		// Re-force okay result to allow writeinc commits
+		result = 1;
+
 		// Commit writes and unlock
 		for(i=0; i<request->count && result > 0; i++)
 		{
@@ -148,18 +154,33 @@ request_transaction_process_internal(request_transaction_t *request, request_t *
 
 		}
 
-		elapsed = elapsed_time(&prequest->start, NULL);
+		gettimeofday(&elapsed, NULL);
 
 		if(insufficient_funds)
 		{
 			// Known error, insufficient funds
-			fprintf(options->out, "%d ISF %d TIME %ld.%06ld\n", prequest->id, request->parts[i].account, elapsed.tv_sec, elapsed.tv_usec);
+			fprintf(options->out,
+				"%d ISF %d TIME %ld.%06ld %ld.%06ld\n",
+				prequest->id,
+				request->parts[i].account,
+				prequest->start.tv_sec,
+				prequest->start.tv_usec,
+				elapsed.tv_sec,
+				elapsed.tv_usec);
 		}
 		else
 		{
 			// Normal transaction
-			fprintf(options->out, "%d OK TIME %ld.%06ld\n", prequest->id, elapsed.tv_sec, elapsed.tv_usec);
+			fprintf(options->out,
+				"%d OK TIME %ld.%06ld %ld.%06ld\n",
+				prequest->id,
+				prequest->start.tv_sec,
+				prequest->start.tv_usec,
+				elapsed.tv_sec,
+				elapsed.tv_usec);
 		}
+
+		fflush(options->out);
 
 		return 1;
 	}

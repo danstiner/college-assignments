@@ -30,6 +30,7 @@ request_check_process(request_t *request, app_options_t *options)
 	int balance = -1;
 	locked_account_t account;
 	request_check_t *check;
+	struct timeval elapsed;
 
 	// Check that the request is a check
 	if(!request_check_isr(request))
@@ -43,6 +44,12 @@ request_check_process(request_t *request, app_options_t *options)
 
 	// Get lock on account
 	result = account_readlock(check->account, check->account_clock, &account);
+
+	// negative one means temporarily unable to get lock
+	if(result == -1)
+	{
+		return REQUEST_RESULT_RETRY;
+	}
 
 	if(result <= 0)
 	{
@@ -67,8 +74,18 @@ request_check_process(request_t *request, app_options_t *options)
 		return result;
 	}
 
+	gettimeofday(&elapsed, NULL);
+
 	// Print out result
-	fprintf(options->out, "%d BAL %d\n", request->id, balance);
+	fprintf(options->out, "%d BAL %d TIME %ld.%06ld %ld.%06ld\n",
+		request->id,
+		balance,
+		request->start.tv_sec,
+		request->start.tv_usec,
+		elapsed.tv_sec,
+		elapsed.tv_usec);
+
+	fflush(options->out);
 
 	return 1;
 }

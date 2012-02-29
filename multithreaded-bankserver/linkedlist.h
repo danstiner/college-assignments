@@ -21,9 +21,11 @@ typedef struct linkedlist {
 
 ll_t *ll_initialize(pthread_mutex_t *mutex);
 
+void *ll_pop_front(ll_t *list);
 void *ll_pop_back(ll_t *list);
-void *ll_peek_back(ll_t *list);
 int ll_push_back(ll_t *list, void *value);
+
+int ll_empty(ll_t *list);
 
 int ll_free(ll_t *list);
 

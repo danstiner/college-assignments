@@ -76,12 +76,10 @@ int account_request_writeinc(int account, int* clock)
 	// DEBUG
 	//fprintf(stderr, "Read request clock: %d\n", accounts[account].request_read_clock);
 
-	accounts[account].request_read_clock++;
-
 	// DEBUG
 	//fprintf(stderr, "Prev Write request clock: %d\n", accounts[account].request_write_clock);
 
-	accounts[account].request_write_clock = accounts[account].request_read_clock;
+	accounts[account].request_write_clock = ++accounts[account].request_read_clock;
 
 	// DEBUG
 	//fprintf(stderr, "Write request clock: %d\n", accounts[account].request_write_clock);
@@ -99,7 +97,7 @@ int account_readlock(int account, int at_clock, locked_account_t *account_lock)
 	//fprintf(stderr, "Read check clock: %d?=%d\n", at_clock, accounts[account].processed_write_clock);
 
 	if(accounts[account].processed_write_clock != at_clock)
-		return 0;
+		return -1;
 
 	// TODO get actual lock maybe?
 

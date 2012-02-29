@@ -3,19 +3,14 @@
 int appserver(int argc, char **argv, int defaultLockMode)
 {
 	int opt;
-	int workerCount;
-	int accountCount;
-	FILE *output;
-	char * prompt = "> ";
-	int lockMode = defaultLockMode;
-
+	app_options_t options = APP_OPTIONS_INITIALIZER;
 
 	// Check special options
 	while((opt = getopt(argc, argv, "p:")) != -1)
 		switch (opt)
 		{
 		case 'p':
-			prompt = optarg;
+			options.prompt = optarg;
 			break;
 		case '?':
 			if(isprint(optopt))
@@ -26,17 +21,24 @@ int appserver(int argc, char **argv, int defaultLockMode)
 
 	// Remaining options should be of the form
 	// appserver <#workers> <#accounts> <outputfile>
-	if(argc-optind < 3)
+	if(argc - optind < 2)
 		server_abort(ERROR_BAD_OPTIONS);
 
-	sscanf(argv[optind+0], "%d", &workerCount);
-	sscanf(argv[optind+1], "%d", &accountCount);
-	output = fopen(argv[optind+2], "w");
+	sscanf(argv[optind+0], "%d", &options.workers);
+	sscanf(argv[optind+1], "%d", &options.accounts);
 
-	if(output == NULL)
-		server_abort(ERROR_BAD_OUTPUTFILE);
+	if(argc - optind > 2)
+	{
+		options.out = fopen(argv[optind+2], "w");
 
-	requests_handle(stdin, output, workerCount, accountCount, prompt, lockMode);
+		if(options.out == NULL)
+			server_abort(ERROR_BAD_OUTPUTFILE);
+	}
+
+	requests_handle(&options);
+
+	if(options.out != stdout)
+		fclose(options.out);
 
 	return EXIT_SUCCESS;
 }

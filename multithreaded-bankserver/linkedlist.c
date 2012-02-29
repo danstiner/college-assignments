@@ -106,12 +106,59 @@ void *ll_pop_back(ll_t *list)
 		return value;
 }
 
+void *ll_pop_front(ll_t *list)
+{
+	pthread_mutex_t *mutex;
+	void *value;
+
+	if(list == NULL)
+		return NULL;
+
+	mutex = list->mutex;
+
+	// We need a mutex to protect list while removing
+	if(mutex != NULL && pthread_mutex_lock(mutex) != 0)
+		return NULL;
+
+	if(list == NULL || list->head == NULL)
+	{
+		if(mutex != NULL)
+			pthread_mutex_unlock(mutex);
+		return NULL;
+	}
+
+	value = list->head->value;
+
+	if(list->tail == list->head)
+	{
+		// Only one item on the list, remove it
+		free(list->head);
+		list->head = NULL;
+		list->tail = NULL;
+	}
+	else
+	{
+		// Unlink list->tail from the list
+		ll_item_t *tmp = list->head;
+		list->head = list->head->next;
+		list->head->prev = NULL;
+		//tmp->prev->next = tmp->next;
+		//tmp->next->prev = tmp->prev;
+		free(tmp);
+	}
+
+	if(mutex != NULL && pthread_mutex_unlock(mutex) != 0)
+		return NULL;
+	else
+		return value;
+}
+
 int ll_push_back(ll_t *list, void *value)
 {
 	pthread_mutex_t *mutex;
 	ll_item_t *new_item;
 
-	if(list == NULL || list->tail == NULL)
+	if(list == NULL)
 		return 0;
 
 	if(NULL == (new_item = malloc(sizeof(ll_item_t))))
@@ -120,13 +167,10 @@ int ll_push_back(ll_t *list, void *value)
 	mutex = list->mutex;
 	
 	// Now we need a mutex to protect list while adding to it
-	if(mutex != NULL && pthread_mutex_lock(mutex) != 0)
-	{
-		free(new_item);
-		return 0;
-	}
+	if(mutex != NULL)
+		pthread_mutex_lock(mutex);
 
-	if(list == NULL || list->tail == NULL)
+	if(list == NULL)
 	{
 		free(new_item);
 		if(mutex != NULL)
@@ -138,22 +182,52 @@ int ll_push_back(ll_t *list, void *value)
 
 	if(list->tail == NULL)
 	{
-		new_item->next = new_item;
-		new_item->prev = new_item;
+		new_item->next = NULL;
+		new_item->prev = NULL;
 		list->tail = new_item;
 		list->head = new_item;
 	}
 	else
 	{
-		new_item->next = list->tail->next;
+		//new_item->next = list->tail->next;
 		new_item->prev = list->tail;
 
-		list->tail->next->prev = new_item;
+		//list->tail->next->prev = new_item;
 		list->tail->next = new_item;
+
+		list->tail = new_item;
 	}
 
-	if(mutex != NULL && pthread_mutex_unlock(mutex) != 0)
-		return -1;
-	else
-		return 1;
+	if(mutex != NULL)
+		pthread_mutex_unlock(mutex);
+	
+	return 1;
+}
+
+
+int
+ll_empty(ll_t *list)
+{
+	pthread_mutex_t *mutex;
+	int result = 0;
+
+	if(list == NULL)
+		return 2;
+
+	mutex = list->mutex;
+
+	// We need a mutex to protect list while removing
+	if(mutex != NULL)
+		pthread_mutex_lock(mutex);
+
+	if(list == NULL)
+		result = 2;
+
+	if(list->head == NULL)
+		result = 1;
+
+	if(mutex != NULL)
+		pthread_mutex_unlock(mutex);
+	
+	return result;
 }

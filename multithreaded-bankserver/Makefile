@@ -1,6 +1,6 @@
 CC=gcc 
 CFLAGS=-O0 -g -Wall -fmessage-length=0
-DEPOS= errors.o tokenizer.o Bank.o linkedlist.o requests.o main.o
+DEPOS= accounts.o common.o Bank.o errors.o linkedlist.o main.o requests.o tokenizer.o request_check.o request_transaction.o
 
 all: appserver appserver-coarse
 
