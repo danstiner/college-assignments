@@ -7,6 +7,9 @@
 #include "Bank.h"
 
 
+#define ACCOUNT_LOCK_TOOSOON -1
+#define ACCOUNT_LOCK_FAIL 0
+
 typedef struct account_lock_struct
 {
 	int id;

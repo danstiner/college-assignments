@@ -37,10 +37,10 @@ int accounts_initialize(app_options_t *options)
 		accounts[i].request_write_clock = 0;
 		accounts[i].processed_read_clock = 0;
 		accounts[i].processed_write_clock = 0;
-		accounts[i].lock = PTHREAD_RWLOCK_INITIALIZER;
-		accounts[i].lock = PTHREAD_RWLOCK_INITIALIZER;
-		accounts[i].mutex = PTHREAD_MUTEX_INITIALIZER;
-		accounts[i].read = PTHREAD_COND_INITIALIZER;
+		//accounts[i].lock = PTHREAD_RWLOCK_INITIALIZER;
+		//accounts[i].lock = PTHREAD_RWLOCK_INITIALIZER;
+		//accounts[i].mutex = PTHREAD_MUTEX_INITIALIZER;
+		//accounts[i].read = PTHREAD_COND_INITIALIZER;
 	}
 
 	return 1;
@@ -91,13 +91,13 @@ int account_readlock(int account, int at_clock, locked_account_t *account_lock)
 {
 	account = accounts_parse(account);
 	if(!account_isvalid(account) || account_lock == NULL)
-		return 0;
+		return ACCOUNT_LOCK_FAIL;
 
 	// DEBUG
 	//fprintf(stderr, "Read check clock: %d?=%d\n", at_clock, accounts[account].processed_write_clock);
 
 	if(accounts[account].processed_write_clock != at_clock)
-		return -1;
+		return ACCOUNT_LOCK_TOOSOON;
 
 	// TODO get actual lock maybe?
 
@@ -140,14 +140,14 @@ int account_writelock(int account, int at_clock, locked_account_t *account_lock)
 {
 	account = accounts_parse(account);
 	if(!account_isvalid(account) || account_lock == NULL)
-		return 0;
+		return ACCOUNT_LOCK_FAIL;
 	
 
 	// DEBUG
 	//fprintf(stderr, "Write check clock: %d?=%d\n", at_clock, accounts[account].processed_read_clock);
 
 	if(accounts[account].processed_read_clock != at_clock)
-		return -1;
+		return ACCOUNT_LOCK_TOOSOON;
 
 	// TODO get actual lock maybe?
 

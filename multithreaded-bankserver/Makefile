@@ -1,5 +1,5 @@
 CC=gcc 
-CFLAGS=-O0 -g -Wall -fmessage-length=0
+CFLAGS=-O3 -g -Wall -fmessage-length=0
 DEPOS= accounts.o common.o Bank.o errors.o linkedlist.o main.o requests.o tokenizer.o request_check.o request_transaction.o
 
 all: appserver appserver-coarse

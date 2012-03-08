@@ -37,23 +37,31 @@ requests_handle_tokens(char **tokens, size_t count, request_handle_opt_t *option
 		return 12;
 	}
 
+	// Print transaction ID back to console
 	fprintf(stdout, "ID %d\n", request->id);
 
+
+	// Lock coarse mutex for entire insert
+	if(options->appoptions->lockmode == LOCK_COARSE)
+		pthread_mutex_lock(&options->coarse_mutex);
+
 	// Add to request list
-	// mutex locking handled by list
+	// fine mutex locking handled by list
 	ll_push_back(options->requests, request);
 	
 	// Inform a worker of new request
 	if(options->appoptions->lockmode == LOCK_FINE)
+	{
 		mutex = &options->requests_mutex;
+		pthread_mutex_lock(mutex);
+	}
 	else // lockmode == LOCK_COARSE
 		mutex = &options->coarse_mutex;
 	
-	// Try to lock mutex during cond signal, but don't care if lock fails
-	pthread_mutex_lock(mutex);
-
+	// Signal workers that there is a new request
 	pthread_cond_signal(&options->requests_onnew);
 
+	// Unlock and finish
 	pthread_mutex_unlock(mutex);
 
 	return 1;
@@ -73,7 +81,7 @@ requests_worker(void *worker_optp)
 	while(1)
 	{
 
-		// Get mutex lock to use
+		// Get appropriate mutex lock to use
 		if(opt->appopt->lockmode == LOCK_FINE)
 			mutex = &opt->handleopt->requests_mutex;
 		else // lockmode == LOCK_COARSE
@@ -89,6 +97,7 @@ requests_worker(void *worker_optp)
 			empty = ll_empty(opt->handleopt->requests);
 		}
 
+		// Stop if queue is empty and we were told to stop
 		if(opt->handleopt->stop && empty > 0)
 		{
 			pthread_mutex_unlock(mutex);
@@ -98,7 +107,9 @@ requests_worker(void *worker_optp)
 		// Pop a request from the queue if possible
 		request = (request_t*) ll_pop_front(opt->handleopt->requests);
 
-		pthread_mutex_unlock(mutex);
+		// Fine lock no longer needed
+		if(opt->appopt->lockmode == LOCK_FINE)
+			pthread_mutex_unlock(mutex);
 
 		if(request == NULL)
 		{
@@ -120,7 +131,9 @@ requests_worker(void *worker_optp)
 		{
 			//fprintf(stderr, "RETRY %d\n", request->id);
 
-			//sleep(10);
+			// Wait a bit before retrying
+
+			usleep(1);
 
 			ll_push_back(opt->handleopt->requests, request);
 
@@ -144,8 +157,13 @@ requests_worker(void *worker_optp)
 
 		// Finished
 
+		// Unlock coarse mutex
+		if(opt->appopt->lockmode == LOCK_COARSE)
+			pthread_mutex_unlock(mutex);
+
 	}
 
+	// Cleanup thread-specific things
 	free(worker_optp);
 
 	return NULL;
@@ -228,7 +246,7 @@ requests_join_workers(pthread_t ** workers, request_handle_opt_t *options)
 	pthread_mutex_unlock(mutex);
 
 	thread = (*workers)[0];
-	for(i=0; thread != NULL; i++, thread=(*workers)[i])
+	for(i=0; (*workers+i) != NULL; i++, thread=(*workers)[i])
 	{
 		pthread_join(thread, NULL);
 	}
@@ -248,7 +266,7 @@ requests_handle(app_options_t *options)
 
 	char **tokens = NULL;
 	size_t tokensSize = 0;
-	size_t tokenCount;
+	size_t tokenCount = 0;
 
 	int cont = 1;
 	pthread_t *workers;
@@ -257,10 +275,10 @@ requests_handle(app_options_t *options)
 	request_handle_opt_t handler;
 	handler.appoptions = options;
 	handler.stop = 0;
-	handler.coarse_mutex = PTHREAD_MUTEX_INITIALIZER;
-	handler.request_list_mutex = PTHREAD_MUTEX_INITIALIZER;
-	handler.requests_mutex = PTHREAD_MUTEX_INITIALIZER;
-	handler.requests_onnew = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_init(&handler.coarse_mutex, NULL);
+	pthread_mutex_init(&handler.request_list_mutex, NULL);
+	pthread_mutex_init(&handler.requests_mutex, NULL);
+	pthread_cond_init(&handler.requests_onnew, NULL);
 
 	// Create bank accounts
 	if(accounts_initialize(options) == 0)
@@ -304,14 +322,11 @@ requests_handle(app_options_t *options)
 		}
 	}
 
-	// DEBUG
-	//fprintf(stderr, "Exiting %d\n", cont);
-
 	// Join all worker threads
 	requests_join_workers(&workers, &handler);
 
-	// DEBUG
-	//fprintf(stderr, "Exited %d\n", cont);
+	// Now force output to flush
+	fflush(options->out);
 
 	// cleanup
 	free(line);
@@ -322,6 +337,5 @@ requests_handle(app_options_t *options)
 	pthread_mutex_destroy(&handler.requests_mutex);
 	pthread_mutex_destroy(&handler.request_list_mutex);
 	pthread_cond_destroy(&handler.requests_onnew);
-
-	// TODO: Workers
+	
 }
